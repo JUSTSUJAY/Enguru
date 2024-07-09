@@ -2,7 +2,7 @@ import streamlit as st
 import os
 from typing import Generator
 from groq import Groq
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from langchain.chains import LLMChain
 from langchain_core.prompts import (
     ChatPromptTemplate,
@@ -14,7 +14,7 @@ from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
 import random
 
-load_dotenv()
+# load_dotenv()
 
 st.set_page_config(page_icon="🏎️", layout="wide", page_title="English Teacher")
 
@@ -28,7 +28,7 @@ icon("🏎️")
 
 st.subheader("English AI Teacher", divider="rainbow", anchor=False)
 
-groq_api_key = os.environ.get("GROQ_API_KEY")
+groq_api_key = st.secrets["api_credentials"]["groq_api"]
 client = Groq(api_key=groq_api_key)
 
 # Initialize chat history and selected model
