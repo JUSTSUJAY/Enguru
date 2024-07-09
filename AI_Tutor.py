@@ -16,7 +16,7 @@ import random
 
 load_dotenv()
 
-st.set_page_config(page_icon="🏎️", layout="wide", page_title="English Teacher")
+st.set_page_config(page_icon="🏎️", layout="wide", page_title="EnGuru")
 
 def icon(emoji: str):
     st.write(
@@ -26,7 +26,7 @@ def icon(emoji: str):
 
 icon("🏎️")
 
-st.subheader("English AI Teacher", divider="rainbow", anchor=False)
+st.subheader("EnGuru", divider="rainbow", anchor=False)
 
 groq_api_key = st.secrets["api_credentials"]["groq_api"]
 client = Groq(api_key=groq_api_key)
