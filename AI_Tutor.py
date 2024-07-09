@@ -2,7 +2,7 @@ import streamlit as st
 import os
 from typing import Generator
 from groq import Groq
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 from langchain.chains import LLMChain
 from langchain_core.prompts import (
     ChatPromptTemplate,
@@ -14,7 +14,7 @@ from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
 import random
 
-# load_dotenv()
+load_dotenv()
 
 st.set_page_config(page_icon="🏎️", layout="wide", page_title="English Teacher")
 
@@ -177,13 +177,32 @@ if prompt:
 # Feedback button logic
 if st.session_state.user_inputs >= 5:
     if st.button("Get Feedback on Your English"):
-        feedback_prompt = f"""Provide feedback on the user's English proficiency. Evaluate their grammar, vocabulary, and give specific suggestions to improve.
-        For example, suggest "don't say this, say this instead" according to their selected proficiency level: {selected_level}.
-        Here are their responses:
-        {[m["content"] for m in st.session_state.messages if m["role"] == "user"]}"""
+        feedback_prompt = f"""Analyze the user's English proficiency based on their responses. Provide detailed feedback on grammar, vocabulary, and sentence structure. Give specific examples of errors and suggest improvements.
+
+Guidelines:
+1. Evaluate grammar usage (e.g., verb tenses, subject-verb agreement, article usage).
+2. Assess vocabulary range and appropriateness for the {selected_level} level.
+3. Comment on sentence structure and complexity.
+4. Provide at least 3 specific examples of errors or areas for improvement.
+5. Suggest alternative phrasings or vocabulary to enhance their English.
+6. Score grammar and vocabulary on a scale of 1-10, considering the user's proficiency level.
+7. Offer tailored advice for improvement based on the {selected_level} level.
+
+User's responses:
+{[m["content"] for m in st.session_state.messages if m["role"] == "user"]}
+
+Format your response as follows:
+Grammar Score: [1-10]
+Vocabulary Score: [1-10]
+Overall Analysis: [Your analysis here]
+Specific Examples and Suggestions:
+1. [Example 1]: [Suggestion 1]
+2. [Example 2]: [Suggestion 2]
+3. [Example 3]: [Suggestion 3]
+Advice for Improvement: [Tailored advice here]"""
 
         try:
-            with st.spinner("Analyzing..."):
+            with st.spinner("Analyzing your English..."):
                 feedback_response = client.chat.completions.create(
                     model=model_option,
                     messages=[
@@ -193,25 +212,41 @@ if st.session_state.user_inputs >= 5:
                 )
                 feedback_content = feedback_response.choices[0].message.content
                 
-                # Extract scores and feedback from the response
-                # Assuming the response contains scores in a structured format
+                # Parse the feedback content
                 feedback_lines = feedback_content.split('\n')
-                grammar_score = 0
-                vocab_score = 0
-                suggestions = []
+                grammar_score = "N/A"
+                vocab_score = "N/A"
+                overall_analysis = ""
+                examples_and_suggestions = []
+                advice = ""
                 
+                current_section = ""
                 for line in feedback_lines:
-                    if "Grammar Score:" in line:
+                    if line.startswith("Grammar Score:"):
                         grammar_score = line.split(":")[1].strip()
-                    elif "Vocabulary Score:" in line:
+                    elif line.startswith("Vocabulary Score:"):
                         vocab_score = line.split(":")[1].strip()
-                    elif "Suggestion:" in line:
-                        suggestions.append(line.split(":", 1)[1].strip())
+                    elif line.startswith("Overall Analysis:"):
+                        current_section = "analysis"
+                    elif line.startswith("Specific Examples and Suggestions:"):
+                        current_section = "examples"
+                    elif line.startswith("Advice for Improvement:"):
+                        current_section = "advice"
+                    elif current_section == "analysis":
+                        overall_analysis += line + " "
+                    elif current_section == "examples" and line.strip():
+                        examples_and_suggestions.append(line.strip())
+                    elif current_section == "advice":
+                        advice += line + " "
 
                 st.success(f"Grammar Score: {grammar_score}/10\nVocabulary Score: {vocab_score}/10")
-                st.markdown("### Suggestions to Improve")
-                for suggestion in suggestions:
-                    st.markdown(f"- {suggestion}")
+                st.markdown("### Overall Analysis")
+                st.write(overall_analysis.strip())
+                st.markdown("### Specific Examples and Suggestions")
+                for example in examples_and_suggestions:
+                    st.markdown(f"- {example}")
+                st.markdown("### Advice for Improvement")
+                st.write(advice.strip())
 
         except Exception as e:
             st.error(f"An error occurred while generating feedback: {e}", icon="🚨")
