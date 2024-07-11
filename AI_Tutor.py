@@ -29,7 +29,7 @@ icon("🏎️")
 
 st.subheader("EnGuru", divider="rainbow", anchor=False)
 
-groq_api_key = st.secrets["api_credentials"]["groq_api"]
+groq_api_key = os.environ.get("GROQ_API_KEY")
 client = Groq(api_key=groq_api_key)
 
 # Initialize session state variables
